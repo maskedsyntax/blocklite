@@ -24,8 +24,8 @@ This repository contains a simple implementation of a blockchain in Python. The 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/simple-blockchain.git
-   cd simple-blockchain
+   git clone https://github.com/maskedsyntax/blocklite.git
+   cd blocklite
    ```
 
 2. Run the blockchain script:
