@@ -29,3 +29,5 @@ test.txt
 
 *.cpp
 *.out
+
+temp.py
