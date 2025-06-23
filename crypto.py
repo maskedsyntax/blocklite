@@ -13,16 +13,16 @@ class Block:
 
     @property
     def calculate_hash(self):
-        block_of_string = "{}{}{}{}{}".format(self.index, self.proof_no,
-                                              self.prev_hash, self.data,
-                                              self.timestamp)
+        block_of_string = "{}{}{}{}{}".format(
+            self.index, self.proof_no, self.prev_hash, self.data, self.timestamp
+        )
 
         return hashlib.sha256(block_of_string.encode()).hexdigest()
 
     def __repr__(self):
-        return "{} - {} - {} - {} - {}".format(self.index, self.proof_no,
-                                               self.prev_hash, self.data,
-                                               self.timestamp)
+        return "{} - {} - {} - {} - {}".format(
+            self.index, self.proof_no, self.prev_hash, self.data, self.timestamp
+        )
 
 
 class BlockChain:
@@ -41,7 +41,8 @@ class BlockChain:
             index=len(self.chain),
             proof_no=proof_no,
             prev_hash=prev_hash,
-            data=self.current_data)
+            data=self.current_data,
+        )
         self.current_data = []
 
         self.chain.append(block)
@@ -55,8 +56,7 @@ class BlockChain:
         elif prev_block.calculate_hash != block.prev_hash:
             return False
 
-        elif not BlockChain.verifying_proof(block.proof_no,
-                                            prev_block.proof_no):
+        elif not BlockChain.verifying_proof(block.proof_no, prev_block.proof_no):
             return False
 
         elif block.timestamp <= prev_block.timestamp:
@@ -65,19 +65,17 @@ class BlockChain:
         return True
 
     def new_data(self, sender, recipient, quantity):
-        self.current_data.append({
-            'sender': sender,
-            'recipient': recipient,
-            'quantity': quantity
-        })
+        self.current_data.append(
+            {"sender": sender, "recipient": recipient, "quantity": quantity}
+        )
         return True
 
     @staticmethod
     def proof_of_work(last_proof):
-        '''this simple algorithm identifies a number f' such that hash(ff') contain 4 leading zeroes
-         f is the previous f'
-         f' is the new proof
-        '''
+        """this simple algorithm identifies a number f' such that hash(ff') contain 4 leading zeroes
+        f is the previous f'
+        f' is the new proof
+        """
         proof_no = 0
         while BlockChain.verifying_proof(proof_no, last_proof) is False:
             proof_no += 1
@@ -86,9 +84,9 @@ class BlockChain:
 
     @staticmethod
     def verifying_proof(last_proof, proof):
-        #verifying the proof: does hash(last_proof, proof) contain 4 leading zeroes?
+        # verifying the proof: does hash(last_proof, proof) contain 4 leading zeroes?
 
-        guess = f'{last_proof}{proof}'.encode()
+        guess = f"{last_proof}{proof}".encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:4] == "0000"
 
@@ -99,10 +97,9 @@ class BlockChain:
     def block_mining(self, details_miner):
 
         self.new_data(
-            sender="0",  #it implies that this node has created a new block
-            receiver=details_miner,
-            quantity=
-            1,  #creating a new block (or identifying the proof number) is awarded with 1
+            sender="0",  # it implies that this node has created a new block
+            recipient=details_miner,
+            quantity=1,  # creating a new block (or identifying the proof number) is awarded with 1
         )
 
         last_block = self.latest_block
@@ -121,14 +118,16 @@ class BlockChain:
 
     @staticmethod
     def obtain_block_object(block_data):
-        #obtains block object from the block data
+        # obtains block object from the block data
 
         return Block(
-            block_data['index'],
-            block_data['proof_no'],
-            block_data['prev_hash'],
-            block_data['data'],
-            timestamp=block_data['timestamp'])
+            block_data["index"],
+            block_data["proof_no"],
+            block_data["prev_hash"],
+            block_data["data"],
+            timestamp=block_data["timestamp"],
+        )
+
 
 blockchain = BlockChain()
 
@@ -140,10 +139,9 @@ last_proof_no = last_block.proof_no
 proof_no = blockchain.proof_of_work(last_proof_no)
 
 blockchain.new_data(
-    sender="0",  #it implies that this node has created a new block
-    recipient="Jane Doe",  #let's send Jane Doe some coins!
-    quantity=
-    1,  #creating a new block (or identifying the proof number) is awarded with 1
+    sender="0",  # it implies that this node has created a new block
+    recipient="Jane Doe",  # let's send Jane Doe some coins!
+    quantity=1,  # creating a new block (or identifying the proof number) is awarded with 1
 )
 
 last_hash = last_block.calculate_hash
