@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Println(utils.SHA256("Hello, World!"))
+	fmt.Printf("%x\n", utils.SHA256("Hello, World!"))
 }
