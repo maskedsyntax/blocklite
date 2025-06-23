@@ -2,11 +2,6 @@ package blockchain
 
 import "fmt"
 
-// import (
-// 	"fmt"
-// 	"time"
-// )
-
 type Block struct {
 	Index        int
 	Timestamp    string
