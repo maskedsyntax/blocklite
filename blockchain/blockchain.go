@@ -42,8 +42,8 @@ func NewBlockChain() *Blockchain {
 }
 
 // Verify the proof
-func VerifyProof(proof, lastproof int) bool {
-	code := strconv.Itoa(proof) + strconv.Itoa(lastproof)
+func VerifyProof(proof, lastProof int) bool {
+	code := strconv.Itoa(proof) + strconv.Itoa(lastProof)
 	fmt.Printf("Generated code: %s\n", code)
 
 	hashedCode := utils.SHA256(code)
@@ -51,6 +51,44 @@ func VerifyProof(proof, lastproof int) bool {
 
 	fmt.Printf("Encoded Hex Code: %s\n", hashedCodeHex)
 	return hashedCodeHex[:4] == "0000"
+}
+
+// ProofOfWork is a simple algorithm that identifies a new proof number
+// such that the hash of the concatenation of the previous proof and the new proof
+// contains 4 leading zeroes. The previous proof is provided as input.
+func ProofOfWork(lastProof int) int {
+	proofNumber := 0
+
+	// Keep incrementing the proof number until a valid proof is found
+	// A valid proof is one that, when hashed with the last proof, results in a hash
+	// with 4 leading zeroes.
+	for VerifyProof(proofNumber, lastProof) {
+		proofNumber += 1
+	}
+
+	return proofNumber
+}
+
+// Function to check if the blockchain is valid
+func IsChainValid(block Block, previousBlock Block) bool {
+	// compare the indices
+	if block.Index != previousBlock.Index+1 {
+		return false
+	}
+	// Compare the previous hash of the block with the hash of the previous block
+	if block.PreviousHash != previousBlock.CalculateHash() {
+		return false
+	}
+	// Verify the proof of work
+	if !VerifyProof(previousBlock.Proof, block.Proof) {
+		return false
+	}
+	// Compare the timestamps
+	if block.Timestamp <= previousBlock.Timestamp {
+		return false
+	}
+
+	return true
 }
 
 // PrintBlocks prints all blocks in the blockchain
