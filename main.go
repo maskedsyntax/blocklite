@@ -11,9 +11,9 @@ func main() {
 }
 
 func testBlockChain() {
-	// Test SHA256 function
-	first_hash := utils.SHA256("Hello, World!")
-	fmt.Printf("%x\n", first_hash)
+	// Test SHA256 hashing of a string
+	firstHash := utils.SHA256("Hello, World!")
+	fmt.Printf("%x\n", firstHash)
 
 	// Create a new blockchain
 	bc := blockchain.NewBlockChain()
@@ -22,7 +22,7 @@ func testBlockChain() {
 	bc.CreateBlock(2, "02343402ABC12")
 
 	// Print the blockchain
-	bc.PrintBlocks()
+	bc.Print()
 
 	// Print Previous/Last Block
 	fmt.Print("Previous Block: ")
@@ -32,7 +32,7 @@ func testBlockChain() {
 	if len(bc.Chain) > 1 {
 		block1 := bc.Chain[len(bc.Chain)-1]
 		block2 := bc.Chain[len(bc.Chain)-2]
-		bc.VerifyProof(block1.Proof, block2.Proof)
+		blockchain.VerifyProof(block1.Proof, block2.Proof)
 	}
 
 	fmt.Println("weeeeeeeee!")
