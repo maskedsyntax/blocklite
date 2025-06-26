@@ -1,6 +1,10 @@
 package blockchain
 
 import (
+	"blocklite/utils"
+	"encoding/hex"
+	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -23,7 +27,7 @@ func (bc *BlockChain) CreateBlock(proof int, previousHash string) Block {
 }
 
 // Return the last/previous Block in the Blockchain
-func (bc *BlockChain) GetPreviousBlock() Block {
+func (bc *BlockChain) GetLatestBlock() Block {
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 	lastBlock.Print()
 	return lastBlock
@@ -35,6 +39,18 @@ func NewBlockChain() *BlockChain {
 	bc.CreateBlock(1, "0")
 
 	return bc
+}
+
+// Proof of Work
+func (bc *BlockChain) VerifyProof(proof, lastproof int) bool {
+	code := strconv.Itoa(proof) + strconv.Itoa(lastproof)
+	fmt.Printf("Generated code: %s\n", code)
+
+	hashedCode := utils.SHA256(code)
+	hashedCodeHex := hex.EncodeToString(hashedCode[:])
+
+	fmt.Printf("Encoded Hex Code: %s\n", hashedCodeHex)
+	return hashedCodeHex[:4] == "0000"
 }
 
 // PrintBlocks prints all blocks in the blockchain
