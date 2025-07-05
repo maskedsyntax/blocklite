@@ -29,14 +29,11 @@ func testBlockChain() {
 
 	// Verify the Proof of Work
 	if len(bc.Chain) > 1 {
-		lastBlock := bc.Chain[len(bc.Chain)-1]
-		secondLastBlock := bc.Chain[len(bc.Chain)-2]
-		if blockchain.IsChainValid(lastBlock, secondLastBlock) {
-			fmt.Println("Blockchain is Valid!")
+		if bc.IsChainValid() {
+			fmt.Println("Blockchain Valid!")
 		} else {
-			fmt.Println("Blockchain is invalid!")
+			fmt.Println("Blockchain Invalid!")
 		}
-		// blockchain.VerifyProof(block1.Proof, block2.Proof)
 	}
 
 	fmt.Println("weeeeeeeee!")

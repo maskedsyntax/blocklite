@@ -74,26 +74,39 @@ func ProofOfWork(lastProof int) int {
 }
 
 // Function to check if the blockchain is valid
-func IsChainValid(block Block, previousBlock Block) bool {
-	// compare the indices
-	if block.Index != previousBlock.Index+1 {
-		fmt.Println("Index Invalid")
-		return false
-	}
-	// Compare the previous hash of the block with the hash of the previous block
-	if block.PreviousHash != previousBlock.CalculateHash() {
-		fmt.Println("Hash Invalid")
-		return false
-	}
-	// Verify the proof of work
-	if valid, _ := VerifyProof(block.Proof, previousBlock.Proof); !valid {
-		fmt.Println("Proof Invalid")
-		return false
-	}
-	// Compare the timestamps
-	if block.Timestamp <= previousBlock.Timestamp {
-		fmt.Println("Timestamp Invalid")
-		return false
+func (bc *Blockchain) IsChainValid() bool {
+
+	previousBlock := bc.Chain[0]
+	blockIndex := 1
+
+	for blockIndex < len(bc.Chain) {
+
+		block := bc.Chain[blockIndex]
+
+		// compare the indices
+		if block.Index != previousBlock.Index+1 {
+			fmt.Println("Index Invalid")
+			return false
+		}
+		// Compare the previous hash of the block with the hash of the previous block
+		if block.PreviousHash != previousBlock.CalculateHash() {
+			fmt.Println("Hash Invalid")
+			return false
+		}
+		// Verify the proof of work
+		if valid, _ := VerifyProof(block.Proof, previousBlock.Proof); !valid {
+			fmt.Println("Proof Invalid")
+			return false
+		}
+		// Compare the timestamps
+		if block.Timestamp <= previousBlock.Timestamp {
+			fmt.Println("Timestamp Invalid")
+			return false
+		}
+
+		previousBlock = bc.Chain[blockIndex]
+		blockIndex += 1
+
 	}
 
 	return true
