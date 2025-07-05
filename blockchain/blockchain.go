@@ -26,13 +26,6 @@ func (bc *Blockchain) CreateBlock(proof int, previousHash string) Block {
 	return block
 }
 
-// Return the last/previous Block in the Blockchain
-func (bc *Blockchain) GetLatestBlock() Block {
-	lastBlock := bc.Chain[len(bc.Chain)-1]
-	lastBlock.Print()
-	return lastBlock
-}
-
 // NewBlockChain creates a new blockchain and adds the genesis block
 func NewBlockChain() *Blockchain {
 	bc := &Blockchain{}
@@ -41,16 +34,23 @@ func NewBlockChain() *Blockchain {
 	return bc
 }
 
+// Return the last/previous Block in the Blockchain
+func (bc *Blockchain) GetLatestBlock() Block {
+	lastBlock := bc.Chain[len(bc.Chain)-1]
+	lastBlock.Print()
+	return lastBlock
+}
+
 // Verify the proof
-func VerifyProof(proof, lastProof int) bool {
+func VerifyProof(proof, lastProof int) (bool, string) {
 	blockData := strconv.Itoa(proof) + strconv.Itoa(lastProof)
-	fmt.Printf("Generated code: %s\n", blockData)
+	// fmt.Printf("Generated code: %s\n", blockData)
 
 	hashedData := utils.SHA256(blockData)
 	hashHex := hex.EncodeToString(hashedData[:])
 
-	fmt.Printf("Encoded Hex Code: %s\n", hashHex)
-	return hashHex[:4] == "0000"
+	// fmt.Printf("Encoded Hex Code: %s\n", hashHex)
+	return hashHex[:4] == "0000", hashHex
 }
 
 // ProofOfWork is a simple algorithm that identifies a new proof number
@@ -62,9 +62,13 @@ func ProofOfWork(lastProof int) int {
 	// Keep incrementing the proof number until a valid proof is found
 	// A valid proof is one that, when hashed with the last proof, results in a hash
 	// with 4 leading zeroes.
-	for VerifyProof(proofNumber, lastProof) {
+	valid, hashHex := VerifyProof(proofNumber, lastProof)
+	for !valid {
 		proofNumber += 1
+		valid, hashHex = VerifyProof(proofNumber, lastProof)
 	}
+
+	fmt.Printf("Encoded Hex Code: %s\n", hashHex)
 
 	return proofNumber
 }
@@ -73,18 +77,22 @@ func ProofOfWork(lastProof int) int {
 func IsChainValid(block Block, previousBlock Block) bool {
 	// compare the indices
 	if block.Index != previousBlock.Index+1 {
+		fmt.Println("Index Invalid")
 		return false
 	}
 	// Compare the previous hash of the block with the hash of the previous block
 	if block.PreviousHash != previousBlock.CalculateHash() {
+		fmt.Println("Hash Invalid")
 		return false
 	}
 	// Verify the proof of work
-	if !VerifyProof(previousBlock.Proof, block.Proof) {
+	if valid, _ := VerifyProof(block.Proof, previousBlock.Proof); !valid {
+		fmt.Println("Proof Invalid")
 		return false
 	}
 	// Compare the timestamps
 	if block.Timestamp <= previousBlock.Timestamp {
+		fmt.Println("Timestamp Invalid")
 		return false
 	}
 

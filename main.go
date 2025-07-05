@@ -2,7 +2,6 @@ package main
 
 import (
 	"blocklite/blockchain"
-	"blocklite/utils"
 	"fmt"
 )
 
@@ -11,28 +10,33 @@ func main() {
 }
 
 func testBlockChain() {
-	// Test SHA256 hashing of a string
-	firstHash := utils.SHA256("Hello, World!")
-	fmt.Printf("%x\n", firstHash)
-
 	// Create a new blockchain
 	bc := blockchain.NewBlockChain()
 
+	// Perform Proof of Work if there are at least two blocks
+	newProof := blockchain.ProofOfWork(1)
+	fmt.Println("New Proof: ", newProof)
+
+	// Print Previous/Last Block
+	fmt.Print("Previous Block: ")
+	latestBlock := bc.GetLatestBlock()
+
 	// Add a new block
-	bc.CreateBlock(2, "02343402ABC12")
+	bc.CreateBlock(newProof, latestBlock.CalculateHash())
 
 	// Print the blockchain
 	bc.Print()
 
-	// Print Previous/Last Block
-	fmt.Print("Previous Block: ")
-	bc.GetLatestBlock()
-
-	// Perform Proof of Work if there are at least two blocks
+	// Verify the Proof of Work
 	if len(bc.Chain) > 1 {
-		block1 := bc.Chain[len(bc.Chain)-1]
-		block2 := bc.Chain[len(bc.Chain)-2]
-		blockchain.VerifyProof(block1.Proof, block2.Proof)
+		lastBlock := bc.Chain[len(bc.Chain)-1]
+		secondLastBlock := bc.Chain[len(bc.Chain)-2]
+		if blockchain.IsChainValid(lastBlock, secondLastBlock) {
+			fmt.Println("Blockchain is Valid!")
+		} else {
+			fmt.Println("Blockchain is invalid!")
+		}
+		// blockchain.VerifyProof(block1.Proof, block2.Proof)
 	}
 
 	fmt.Println("weeeeeeeee!")
