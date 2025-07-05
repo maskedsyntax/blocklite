@@ -43,14 +43,14 @@ func NewBlockChain() *Blockchain {
 
 // Verify the proof
 func VerifyProof(proof, lastProof int) bool {
-	code := strconv.Itoa(proof) + strconv.Itoa(lastProof)
-	fmt.Printf("Generated code: %s\n", code)
+	blockData := strconv.Itoa(proof) + strconv.Itoa(lastProof)
+	fmt.Printf("Generated code: %s\n", blockData)
 
-	hashedCode := utils.SHA256(code)
-	hashedCodeHex := hex.EncodeToString(hashedCode[:])
+	hashedData := utils.SHA256(blockData)
+	hashHex := hex.EncodeToString(hashedData[:])
 
-	fmt.Printf("Encoded Hex Code: %s\n", hashedCodeHex)
-	return hashedCodeHex[:4] == "0000"
+	fmt.Printf("Encoded Hex Code: %s\n", hashHex)
+	return hashHex[:4] == "0000"
 }
 
 // ProofOfWork is a simple algorithm that identifies a new proof number

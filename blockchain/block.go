@@ -16,13 +16,14 @@ type Block struct {
 
 // Calculate Hash of the Block
 func (b *Block) CalculateHash() string {
-	code := strconv.Itoa(b.Index) + b.Timestamp + strconv.Itoa(b.Proof) + b.PreviousHash
-	hashedCode := utils.SHA256(code)
-	hashedCodeHex := hex.EncodeToString(hashedCode[:])
-	return hashedCodeHex
+	blockData := strconv.Itoa(b.Index) + b.Timestamp + strconv.Itoa(b.Proof) + b.PreviousHash
+	hashedData := utils.SHA256(blockData)
+	hashHex := hex.EncodeToString(hashedData[:])
+	return hashHex
 }
 
 // Print the details of the block
 func (b *Block) Print() {
-	fmt.Printf("{Index: %d, Timestamp: %s, Proof: %d, PreviousHash: %s}\n", b.Index, b.Timestamp, b.Proof, b.PreviousHash)
+	fmt.Printf("{Index: %d, Timestamp: %s, Proof: %d, PreviousHash: %s}\n",
+		b.Index, b.Timestamp, b.Proof, b.PreviousHash)
 }
