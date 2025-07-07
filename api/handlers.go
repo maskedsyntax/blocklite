@@ -38,6 +38,7 @@ func GetTimestamp(c *gin.Context, bc *blockchain.Blockchain) {
 
 // Return the number of blocks in the blockchain
 func GetLength(c *gin.Context, bc *blockchain.Blockchain) {
+	c.JSON(http.StatusOK, bc.GetLength())
 }
 
 // Return the entire blockchain
