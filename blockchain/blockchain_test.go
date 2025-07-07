@@ -17,9 +17,6 @@ func mockTime(t time.Time) func() {
 	return func() { timeNow = originalTimeNow }
 }
 
-// timeNow is a variable to allow mocking time.Now in tests.
-// var timeNow = time.Now
-
 // TestCreateBlock verifies that CreateBlock constructs a new block with the correct fields
 // and appends it to the blockchain.
 func TestCreateBlock(t *testing.T) {
