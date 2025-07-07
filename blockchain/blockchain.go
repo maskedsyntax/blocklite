@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var timeNow = time.Now
+
 // The entire blockchain
 type Blockchain struct {
 	Chain []Block
@@ -16,8 +18,9 @@ type Blockchain struct {
 // CreateBlock adds a new block to the blockchain
 func (bc *Blockchain) CreateBlock(proof int, previousHash string) Block {
 	block := Block{
-		Index:        len(bc.Chain) + 1,
-		Timestamp:    time.Now().String(),
+		Index: len(bc.Chain) + 1,
+		// Timestamp: time.Now().String(),
+		Timestamp:    timeNow().UTC().Format(time.RFC3339),
 		Proof:        proof,
 		PreviousHash: previousHash,
 	}
