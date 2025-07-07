@@ -122,3 +122,16 @@ func (bc *Blockchain) Print() {
 		block.Print()
 	}
 }
+
+// Return the number of blocks in the blockchain.
+func (bc *Blockchain) GetLength() int {
+	return len(bc.Chain)
+}
+
+// Return the block at the specified index (1-based)
+func (bc *Blockchain) GetBlockByIndex(index int) (Block, bool) {
+	if index < 1 || index > len(bc.Chain) {
+		return Block{}, false
+	}
+	return bc.Chain[index-1], true
+}

@@ -1,8 +1,12 @@
 package main
 
 import (
+	"blocklite/api"
 	"blocklite/blockchain"
-	"fmt"
+	"blocklite/config"
+	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -10,31 +14,19 @@ func main() {
 }
 
 func testBlockChain() {
-	// Create a new blockchain
+	// Load configuration
+	cfg := config.LoadConfig()
+
+	// Initialize blockchain (singleton)
 	bc := blockchain.NewBlockChain()
 
-	// Perform Proof of Work if there are at least two blocks
-	newProof := blockchain.ProofOfWork(1)
-	fmt.Println("New Proof: ", newProof)
+	// Set up Gin router
+	router := gin.Default()
+	api.SetupRoutes(router, bc)
 
-	// Print Previous/Last Block
-	fmt.Print("Previous Block: ")
-	latestBlock := bc.GetLatestBlock()
-
-	// Add a new block
-	bc.CreateBlock(newProof, latestBlock.CalculateHash())
-
-	// Print the blockchain
-	bc.Print()
-
-	// Verify the Proof of Work
-	if len(bc.Chain) > 1 {
-		if bc.IsChainValid() {
-			fmt.Println("Blockchain Valid!")
-		} else {
-			fmt.Println("Blockchain Invalid!")
-		}
+	// Start server
+	log.Printf("Starting server on port %s", cfg.Port)
+	if err := router.Run(":" + cfg.Port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
-
-	fmt.Println("weeeeeeeee!")
 }
