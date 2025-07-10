@@ -30,4 +30,6 @@ test.txt
 *.cpp
 *.out
 
+/tmp
+
 temp.py
