@@ -1,24 +1,37 @@
-# Block Lite
-<!-- A basic crypto coin in Python3 using hashlib (sha-256 encryption). -->
+<p align="center">
+  <img src="assets/blocklite_logo.svg" alt="BlockLite Logo" width="400" />
+</p>
 
+<h1 align="center">BlockLite</h1>
 
-## Simple Blockchain Implementation
+<p align="center">
+  <b> An experimental blockchain implementation written from scratch in Go! </b>
+</p>
 
-This repository contains a simple implementation of a blockchain in Python. The code demonstrates the basic concepts of a blockchain, including block creation, mining, proof of work, and data validation.
+<p align="center">
+
+  <img src="https://img.shields.io/badge/Status-In%20Progress-orange" />
+  <img src="https://img.shields.io/badge/Built_with-Go-blueviolet" />
+  <img src="https://img.shields.io/badge/API-Gin-8bc34a" />
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg" />
+</p>
+
+## Overview
+
+BlockLite aims to build a blockchain from the ground up, with plans to introduce a cryptocurrency called **MaskedCoins**. The current codebase includes a basic blockchain structure with proof-of-work consensus, RESTful APIs, and supporting utilities, with more features in development.
 
 ## Features
+- **Blockchain Core**: Implements a simple blockchain with blocks containing index, timestamp, proof, and previous hash.
+- **Proof of Work**: Uses a basic PoW algorithm requiring 4 leading zeros in the hash.
+- **API Endpoints**: Provides RESTful APIs via Gin to interact with the blockchain (e.g., get blocks, mine new blocks).
 
-- **Block Creation**: Each block contains an index, proof number, previous hash, data, and a timestamp.
-- **Proof of Work**: A simple proof-of-work algorithm is used to mine new blocks.
-- **Data Validation**: Ensures that each block is valid by checking the index, hash, proof, and timestamp.
-- **Mining Rewards**: Reward system for miners for creating new blocks.
-- **Node Management**: Ability to add nodes to the network.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.x
+- Go (1.18+)
+- Git
 
 ### Installation
 
@@ -28,82 +41,38 @@ This repository contains a simple implementation of a blockchain in Python. The 
    cd blocklite
    ```
 
-2. Run the blockchain script:
+2. Install dependencies:
    ```bash
-   python blockchain.py
+   go mod tidy
    ```
 
-### Usage
-
-The script demonstrates the creation of a simple blockchain, mining of new blocks, and adding data to the blockchain.
-
-1. **Initialize the Blockchain**:
-   ```python
-   blockchain = BlockChain()
+3. Install `air` for live reloading:
+   ```bash
+   go install github.com/air-verse/air@latest
    ```
 
-2. **Mine a New Block**:
-   ```python
-   print("***Mining Coinxyz about to start***")
-   print(blockchain.chain)
+> [!IMPORTANT]
+> Ensure `air` is in your PATH to execute it successfully.  
 
-   last_block = blockchain.latest_block
-   last_proof_no = last_block.proof_no
-   proof_no = blockchain.proof_of_work(last_proof_no)
+### Run the Project
+- Start the server with live reloading:
+  ```bash
+  air
+  ```
+- Access the API at `http://localhost:8080` (configurable via `PORT` environment variable).
 
-   blockchain.new_data(
-       sender="0",
-       recipient="Jane Doe",
-       quantity=1,
-   )
-
-   last_hash = last_block.calculate_hash
-   block = blockchain.construct_block(proof_no, last_hash)
-
-   print("***Mining Coinxyz has been successful***")
-   print(blockchain.chain)
+## Development
+- **Live Reloading**: Changes in `.go` files trigger restarts via `air`. The `/tmp` folder is temporary and ignored in version control.
+- **Testing**: Run tests with:
+   ```bash
+   go test ./...
    ```
 
-3. **View the Blockchain**:
-   ```python
-   for block in blockchain.chain:
-       print(block)
-   ```
+## Contributing
+This is a personal project, but feel free to fork and submit pull requests. Feedback is welcome!
 
-## Code Overview
+## License
+This project is licensed under the [MIT License](LICENSE). See the `LICENSE` file for details.
 
-### Block Class
-
-The `Block` class represents a single block in the blockchain.
-
-- **Attributes**:
-  - `index`: The position of the block in the blockchain.
-  - `proof_no`: The proof number of the block.
-  - `prev_hash`: The hash of the previous block.
-  - `data`: The data stored in the block.
-  - `timestamp`: The time the block was created.
-
-- **Methods**:
-  - `calculate_hash`: Calculates the SHA-256 hash of the block.
-  - `__repr__`: Returns a string representation of the block.
-
-### BlockChain Class
-
-The `BlockChain` class manages the entire blockchain.
-
-- **Attributes**:
-  - `chain`: A list of all the blocks in the blockchain.
-  - `current_data`: A list of data to be added to the next block.
-  - `nodes`: A set of nodes in the network.
-
-- **Methods**:
-  - `construct_genesis`: Creates the genesis block.
-  - `construct_block`: Adds a new block to the blockchain.
-  - `check_validity`: Validates a block against the previous block.
-  - `new_data`: Adds new data to the current data list.
-  - `proof_of_work`: Performs the proof-of-work algorithm.
-  - `verifying_proof`: Verifies the proof of a block.
-  - `latest_block`: Returns the latest block in the blockchain.
-  - `block_mining`: Mines a new block and rewards the miner.
-  - `create_node`: Adds a new node to the network.
-  - `obtain_block_object`: Creates a block object from block data.
+> [!NOTE]
+> Updates on `MaskedCoins` and future features will be shared as they progress. 
