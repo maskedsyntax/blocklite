@@ -18,7 +18,7 @@
 
 ## Overview
 
-BlockLite aims to build a blockchain from the ground up, with plans to introduce a cryptocurrency called **MaskedCoins**. The current codebase includes a basic blockchain structure with proof-of-work consensus, RESTful APIs, and supporting utilities, with more features in development.
+BlockLite aims to build a blockchain from the ground up, with plans to introduce a cryptocurrency called **`MaskedCoins`**. The current codebase includes a basic blockchain structure with proof-of-work consensus, RESTful APIs, and supporting utilities, with more features in development.
 
 ## Features
 - **Blockchain Core**: Implements a simple blockchain with blocks containing index, timestamp, proof, and previous hash.
