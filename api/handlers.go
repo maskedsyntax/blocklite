@@ -48,7 +48,7 @@ func GetProofOfWork(c *gin.Context, bc *blockchain.Blockchain) {
 // Return the hash of the latest block
 func GetPreviousHash(c *gin.Context, bc *blockchain.Blockchain) {
 	latestBlock := bc.GetLatestBlock()
-	c.JSON(http.StatusOK, gin.H{"previousHash": latestBlock.Proof})
+	c.JSON(http.StatusOK, gin.H{"previousHash": latestBlock.CalculateHash()})
 }
 
 // Retrieve a block by its index
@@ -78,8 +78,7 @@ func GetTimestamp(c *gin.Context, bc *blockchain.Blockchain) {
 
 // Return the number of blocks in the blockchain
 func GetLength(c *gin.Context, bc *blockchain.Blockchain) {
-	latestBlock := bc.GetLatestBlock()
-	c.JSON(http.StatusOK, gin.H{"length": latestBlock.Timestamp})
+	c.JSON(http.StatusOK, gin.H{"length": bc.GetLength()})
 }
 
 // Return the entire blockchain
