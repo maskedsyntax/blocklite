@@ -115,7 +115,10 @@ func TestPrint(t *testing.T) {
 			os.Stdout = w
 			t.Cleanup(func() {
 				os.Stdout = originalStdout
-				r.Close()
+				err := r.Close()
+				if err != nil {
+					return
+				}
 			})
 
 			// Execute Print method

@@ -173,7 +173,10 @@ func TestGetLatestBlock(t *testing.T) {
 			os.Stdout = w
 			t.Cleanup(func() {
 				os.Stdout = originalStdout
-				r.Close()
+				err := r.Close()
+				if err != nil {
+					return
+				}
 			})
 
 			// Handle panic for empty chain.
@@ -286,7 +289,10 @@ func TestProofOfWork(t *testing.T) {
 			os.Stdout = w
 			t.Cleanup(func() {
 				os.Stdout = originalStdout
-				r.Close()
+				err := r.Close()
+				if err != nil {
+					return
+				}
 			})
 
 			// Execute ProofOfWork.
@@ -425,7 +431,10 @@ func TestBlockchainPrint(t *testing.T) {
 			os.Stdout = w
 			t.Cleanup(func() {
 				os.Stdout = originalStdout
-				r.Close()
+				err := r.Close()
+				if err != nil {
+					return
+				}
 			})
 
 			// Execute Print method.
