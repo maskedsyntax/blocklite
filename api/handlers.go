@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Retrieve all blocks from the blockchain
+// GetBlocks Retrieve all blocks from the blockchain
 func GetBlocks(c *gin.Context, bc *blockchain.Blockchain) {
 	c.JSON(http.StatusOK, bc.Chain)
 }
 
-// Add a new block to the blockchain
+// CreateBlock Add a new block to the blockchain
 func CreateBlock(c *gin.Context, bc *blockchain.Blockchain) {
 	var newBlock blockchain.Block
 
@@ -29,7 +29,7 @@ func CreateBlock(c *gin.Context, bc *blockchain.Blockchain) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Block mined successfully", "block": newBlock})
 }
 
-// Mine a new block with proof of work
+// MineBlock Mine a new block with proof of work
 func MineBlock(c *gin.Context, bc *blockchain.Blockchain) {
 	latestBlock := bc.GetLatestBlock()
 	newProof := blockchain.ProofOfWork(latestBlock.Proof)
@@ -38,20 +38,20 @@ func MineBlock(c *gin.Context, bc *blockchain.Blockchain) {
 	c.JSON(http.StatusOK, gin.H{"message": "Congratulations! You just mined a block", "block": newBlock})
 }
 
-// Calculate the proof of work for the latest block
+// GetProofOfWork Calculate the proof of work for the latest block
 func GetProofOfWork(c *gin.Context, bc *blockchain.Blockchain) {
 	latestBlock := bc.GetLatestBlock()
 	proof := blockchain.ProofOfWork(latestBlock.Proof)
 	c.JSON(http.StatusOK, gin.H{"proof": proof})
 }
 
-// Return the hash of the latest block
+// GetPreviousHash Return the hash of the latest block
 func GetPreviousHash(c *gin.Context, bc *blockchain.Blockchain) {
 	latestBlock := bc.GetLatestBlock()
 	c.JSON(http.StatusOK, gin.H{"previousHash": latestBlock.CalculateHash()})
 }
 
-// Retrieve a block by its index
+// GetBlockByIndex Retrieve a block by its index
 func GetBlockByIndex(c *gin.Context, bc *blockchain.Blockchain) {
 	index := c.Param("index")
 
@@ -70,18 +70,18 @@ func GetBlockByIndex(c *gin.Context, bc *blockchain.Blockchain) {
 	c.JSON(http.StatusOK, block)
 }
 
-// Return the timestamp of the latest block
+// GetTimestamp Return the timestamp of the latest block
 func GetTimestamp(c *gin.Context, bc *blockchain.Blockchain) {
 	latestBlock := bc.GetLatestBlock()
 	c.JSON(http.StatusOK, gin.H{"timestamp": latestBlock.Timestamp})
 }
 
-// Return the number of blocks in the blockchain
+// GetLength Return the number of blocks in the blockchain
 func GetLength(c *gin.Context, bc *blockchain.Blockchain) {
 	c.JSON(http.StatusOK, gin.H{"length": bc.GetLength()})
 }
 
-// Return the entire blockchain
+// GetFullChain Return the entire blockchain
 func GetFullChain(c *gin.Context, bc *blockchain.Blockchain) {
 	response := struct {
 		Length int                `json:"length"`

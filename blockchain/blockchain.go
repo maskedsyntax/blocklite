@@ -10,7 +10,7 @@ import (
 
 var timeNow = time.Now
 
-// The entire blockchain
+// Blockchain The entire blockchain
 type Blockchain struct {
 	Chain []Block
 }
@@ -37,14 +37,14 @@ func NewBlockChain() *Blockchain {
 	return bc
 }
 
-// Return the last/previous Block in the Blockchain
+// GetLatestBlock Return the last/previous Block in the Blockchain
 func (bc *Blockchain) GetLatestBlock() Block {
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 	lastBlock.Print()
 	return lastBlock
 }
 
-// Verify the proof
+// VerifyProof Verify the proof
 func VerifyProof(proof, lastProof int) (bool, string) {
 	blockData := strconv.Itoa(proof) + strconv.Itoa(lastProof)
 	// fmt.Printf("Generated code: %s\n", blockData)
@@ -76,7 +76,7 @@ func ProofOfWork(lastProof int) int {
 	return proofNumber
 }
 
-// Function to check if the blockchain is valid
+// IsChainValid Function to check if the blockchain is valid
 func (bc *Blockchain) IsChainValid() bool {
 
 	previousBlock := bc.Chain[0]
@@ -115,7 +115,7 @@ func (bc *Blockchain) IsChainValid() bool {
 	return true
 }
 
-// PrintBlocks prints all blocks in the blockchain
+// Print PrintBlocks prints all blocks in the blockchain
 func (bc *Blockchain) Print() {
 	for _, block := range bc.Chain {
 		// fmt.Printf("Index: %d, Timestamp: %s, Proof: %d, PreviousHash: %s\n", block.Index, block.Timestamp, block.Proof, block.PreviousHash)
@@ -123,12 +123,12 @@ func (bc *Blockchain) Print() {
 	}
 }
 
-// Return the number of blocks in the blockchain.
+// GetLength Return the number of blocks in the blockchain.
 func (bc *Blockchain) GetLength() int {
 	return len(bc.Chain)
 }
 
-// Return the block at the specified index (1-based)
+// GetBlockByIndex Return the block at the specified index (1-based)
 func (bc *Blockchain) GetBlockByIndex(index int) (Block, bool) {
 	if index < 1 || index > len(bc.Chain) {
 		return Block{}, false

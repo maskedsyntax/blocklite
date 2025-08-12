@@ -14,7 +14,7 @@ type Block struct {
 	PreviousHash string
 }
 
-// Calculate Hash of the Block
+// CalculateHash Calculate Hash of the Block
 func (b *Block) CalculateHash() string {
 	blockData := strconv.Itoa(b.Index) + b.Timestamp + strconv.Itoa(b.Proof) + b.PreviousHash
 	hashedData := utils.SHA256(blockData)
