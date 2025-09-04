@@ -77,7 +77,7 @@ class BlockChain:
         f' is the new proof
         """
         proof_no = 0
-        while BlockChain.verifying_proof(proof_no, last_proof) is False:
+        while not BlockChain.verifying_proof(proof_no, last_proof):
             proof_no += 1
 
         return proof_no
