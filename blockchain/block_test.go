@@ -78,7 +78,7 @@ func TestPrint(t *testing.T) {
 				Proof:        12345,
 				PreviousHash: "0",
 			},
-			expected: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Proof: 12345, PreviousHash: 0}\n",
+			expected: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Transactions: 0, Proof: 12345, PreviousHash: 0}\n",
 		},
 		{
 			name: "Zero proof",
@@ -88,7 +88,7 @@ func TestPrint(t *testing.T) {
 				Proof:        0,
 				PreviousHash: "abc123",
 			},
-			expected: "{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Proof: 0, PreviousHash: abc123}\n",
+			expected: "{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Transactions: 0, Proof: 0, PreviousHash: abc123}\n",
 		},
 		{
 			name: "Empty previous hash",
@@ -98,7 +98,7 @@ func TestPrint(t *testing.T) {
 				Proof:        999,
 				PreviousHash: "",
 			},
-			expected: "{Index: 3, Timestamp: 2025-07-06T14:00:00Z, Proof: 999, PreviousHash: }\n",
+			expected: "{Index: 3, Timestamp: 2025-07-06T14:00:00Z, Transactions: 0, Proof: 999, PreviousHash: }\n",
 		},
 	}
 

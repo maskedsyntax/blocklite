@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +21,10 @@ func mockTime(t time.Time) func() {
 // TestCreateBlock verifies that CreateBlock constructs a new block with the correct fields
 // and appends it to the blockchain.
 func TestCreateBlock(t *testing.T) {
+	// Clean up before and after test
+	os.Remove(BlockchainFile)
+	defer os.Remove(BlockchainFile)
+
 	// Test cases cover initial block creation and subsequent blocks with varied inputs.
 	tests := []struct {
 		name          string
@@ -39,6 +44,7 @@ func TestCreateBlock(t *testing.T) {
 			expectedBlock: Block{
 				Index:        1,
 				Timestamp:    time.Date(2025, 7, 6, 12, 0, 0, 0, time.UTC).Format(time.RFC3339),
+				Transactions: []Transaction{},
 				Proof:        100,
 				PreviousHash: "0",
 			},
@@ -55,6 +61,7 @@ func TestCreateBlock(t *testing.T) {
 			expectedBlock: Block{
 				Index:        2,
 				Timestamp:    time.Date(2025, 7, 6, 13, 0, 0, 0, time.UTC).Format(time.RFC3339),
+				Transactions: []Transaction{},
 				Proof:        200,
 				PreviousHash: "abc123",
 			},
@@ -67,11 +74,14 @@ func TestCreateBlock(t *testing.T) {
 			// Mock time.Now for deterministic timestamps.
 			defer mockTime(tt.timestamp)()
 
-			bc := &Blockchain{Chain: tt.chain}
+			bc := &Blockchain{
+				Chain:               tt.chain,
+				CurrentTransactions: []Transaction{},
+			}
 			got := bc.CreateBlock(tt.proof, tt.previousHash)
 
 			// Verify block fields.
-			if got != tt.expectedBlock {
+			if !reflect.DeepEqual(got, tt.expectedBlock) {
 				t.Errorf("CreateBlock() = %+v; want %+v", got, tt.expectedBlock)
 			}
 
@@ -81,7 +91,7 @@ func TestCreateBlock(t *testing.T) {
 			}
 
 			// Verify the block was appended.
-			if len(bc.Chain) > 0 && bc.Chain[len(bc.Chain)-1] != tt.expectedBlock {
+			if len(bc.Chain) > 0 && !reflect.DeepEqual(bc.Chain[len(bc.Chain)-1], tt.expectedBlock) {
 				t.Errorf("Last block = %+v; want %+v", bc.Chain[len(bc.Chain)-1], tt.expectedBlock)
 			}
 		})
@@ -90,6 +100,10 @@ func TestCreateBlock(t *testing.T) {
 
 // TestNewBlockChain validates that NewBlockChain initializes a blockchain with a genesis block.
 func TestNewBlockChain(t *testing.T) {
+	// Clean up before and after test
+	os.Remove(BlockchainFile)
+	defer os.Remove(BlockchainFile)
+	
 	// Test cases cover the creation of a new blockchain with a genesis block.
 	tests := []struct {
 		name          string
@@ -102,6 +116,7 @@ func TestNewBlockChain(t *testing.T) {
 			expectedBlock: Block{
 				Index:        1,
 				Timestamp:    time.Date(2025, 7, 6, 12, 0, 0, 0, time.UTC).Format(time.RFC3339),
+				Transactions: []Transaction{},
 				Proof:        1,
 				PreviousHash: "0",
 			},
@@ -121,7 +136,7 @@ func TestNewBlockChain(t *testing.T) {
 			}
 
 			// Verify genesis block fields.
-			if got := bc.Chain[0]; got != tt.expectedBlock {
+			if got := bc.Chain[0]; !reflect.DeepEqual(got, tt.expectedBlock) {
 				t.Errorf("Genesis block = %+v; want %+v", got, tt.expectedBlock)
 			}
 		})
@@ -141,19 +156,19 @@ func TestGetLatestBlock(t *testing.T) {
 		{
 			name: "Single block",
 			chain: []Block{
-				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Proof: 1, PreviousHash: "0"},
+				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Transactions: []Transaction{}, Proof: 1, PreviousHash: "0"},
 			},
-			expected:    Block{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Proof: 1, PreviousHash: "0"},
-			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Proof: 1, PreviousHash: 0}\n",
+			expected:    Block{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Transactions: []Transaction{}, Proof: 1, PreviousHash: "0"},
+			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Transactions: 0, Proof: 1, PreviousHash: 0}\n",
 		},
 		{
 			name: "Multiple blocks",
 			chain: []Block{
-				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Proof: 1, PreviousHash: "0"},
-				{Index: 2, Timestamp: "2025-07-06T13:00:00Z", Proof: 2, PreviousHash: "abc123"},
+				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Transactions: []Transaction{}, Proof: 1, PreviousHash: "0"},
+				{Index: 2, Timestamp: "2025-07-06T13:00:00Z", Transactions: []Transaction{}, Proof: 2, PreviousHash: "abc123"},
 			},
-			expected:    Block{Index: 2, Timestamp: "2025-07-06T13:00:00Z", Proof: 2, PreviousHash: "abc123"},
-			expectedOut: "{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Proof: 2, PreviousHash: abc123}\n",
+			expected:    Block{Index: 2, Timestamp: "2025-07-06T13:00:00Z", Transactions: []Transaction{}, Proof: 2, PreviousHash: "abc123"},
+			expectedOut: "{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Transactions: 0, Proof: 2, PreviousHash: abc123}\n",
 		},
 		{
 			name:        "Empty chain",
@@ -189,7 +204,10 @@ func TestGetLatestBlock(t *testing.T) {
 			}
 
 			// Execute GetLatestBlock.
-			bc := &Blockchain{Chain: tt.chain}
+			bc := &Blockchain{
+				Chain:               tt.chain,
+				CurrentTransactions: []Transaction{},
+			}
 			got := bc.GetLatestBlock()
 
 			// Close writer to flush output.
@@ -209,7 +227,7 @@ func TestGetLatestBlock(t *testing.T) {
 			}
 
 			// Verify returned block.
-			if got != tt.expected {
+			if !reflect.DeepEqual(got, tt.expected) {
 				t.Errorf("GetLatestBlock() = %+v; want %+v", got, tt.expected)
 			}
 
@@ -380,7 +398,10 @@ func TestIsChainValid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bc := &Blockchain{Chain: tt.chain}
+			bc := &Blockchain{
+				Chain:               tt.chain,
+				CurrentTransactions: []Transaction{},
+			}
 			got := bc.IsChainValid()
 			if got != tt.expected {
 				t.Errorf("IsChainValid() = %v; want %v", got, tt.expected)
@@ -408,7 +429,7 @@ func TestBlockchainPrint(t *testing.T) {
 			chain: []Block{
 				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Proof: 1, PreviousHash: "0"},
 			},
-			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Proof: 1, PreviousHash: 0}\n",
+			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Transactions: 0, Proof: 1, PreviousHash: 0}\n",
 		},
 		{
 			name: "Multiple blocks",
@@ -416,7 +437,7 @@ func TestBlockchainPrint(t *testing.T) {
 				{Index: 1, Timestamp: "2025-07-06T12:00:00Z", Proof: 1, PreviousHash: "0"},
 				{Index: 2, Timestamp: "2025-07-06T13:00:00Z", Proof: 2, PreviousHash: "abc123"},
 			},
-			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Proof: 1, PreviousHash: 0}\n{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Proof: 2, PreviousHash: abc123}\n",
+			expectedOut: "{Index: 1, Timestamp: 2025-07-06T12:00:00Z, Transactions: 0, Proof: 1, PreviousHash: 0}\n{Index: 2, Timestamp: 2025-07-06T13:00:00Z, Transactions: 0, Proof: 2, PreviousHash: abc123}\n",
 		},
 	}
 
@@ -438,7 +459,10 @@ func TestBlockchainPrint(t *testing.T) {
 			})
 
 			// Execute Print method.
-			bc := &Blockchain{Chain: tt.chain}
+			bc := &Blockchain{
+				Chain:               tt.chain,
+				CurrentTransactions: []Transaction{},
+			}
 			bc.Print()
 
 			// Close writer to flush output.

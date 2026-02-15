@@ -10,13 +10,18 @@ import (
 type Block struct {
 	Index        int
 	Timestamp    string
+	Transactions []Transaction
 	Proof        int // TODO: for now, we keep it int
 	PreviousHash string
 }
 
 // CalculateHash Calculate Hash of the Block
 func (b *Block) CalculateHash() string {
-	blockData := strconv.Itoa(b.Index) + b.Timestamp + strconv.Itoa(b.Proof) + b.PreviousHash
+	txData := ""
+	for _, tx := range b.Transactions {
+		txData += tx.Sender + tx.Receiver + strconv.FormatFloat(tx.Amount, 'f', -1, 64)
+	}
+	blockData := strconv.Itoa(b.Index) + b.Timestamp + txData + strconv.Itoa(b.Proof) + b.PreviousHash
 	hashedData := utils.SHA256(blockData)
 	hashHex := hex.EncodeToString(hashedData[:])
 	return hashHex
@@ -24,6 +29,6 @@ func (b *Block) CalculateHash() string {
 
 // Print the details of the block
 func (b *Block) Print() {
-	fmt.Printf("{Index: %d, Timestamp: %s, Proof: %d, PreviousHash: %s}\n",
-		b.Index, b.Timestamp, b.Proof, b.PreviousHash)
+	fmt.Printf("{Index: %d, Timestamp: %s, Transactions: %d, Proof: %d, PreviousHash: %s}\n",
+		b.Index, b.Timestamp, len(b.Transactions), b.Proof, b.PreviousHash)
 }

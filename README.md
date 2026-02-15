@@ -21,9 +21,31 @@
 BlockLite aims to build a blockchain from the ground up, with plans to introduce a cryptocurrency called **`MaskedCoins`**. The current codebase includes a basic blockchain structure with proof-of-work consensus, RESTful APIs, and supporting utilities, with more features in development.
 
 ## Features
-- **Blockchain Core**: Implements a simple blockchain with blocks containing index, timestamp, proof, and previous hash.
-- **Proof of Work**: Uses a basic PoW algorithm requiring 4 leading zeros in the hash.
-- **API Endpoints**: Provides RESTful APIs via Gin to interact with the blockchain (e.g., get blocks, mine new blocks).
+- **Blockchain Core**: Implements a simple blockchain with blocks containing index, timestamp, proof, previous hash, and transactions.
+- **Transactions & Mempool**: Support for value transfers with a mempool for pending transactions.
+- **Wallet System**: ECDSA-based wallets for generating addresses and signing transactions.
+- **Persistence**: Automatic blockchain state persistence to a JSON file.
+- **P2P Networking & Consensus**: Register multiple nodes and resolve conflicts using the "Longest Chain Rule".
+- **Proof of Work**: Uses a PoW algorithm requiring 4 leading zeros in the hash.
+
+## API Endpoints
+
+### Blockchain
+- `GET /api/full-chain`: Retrieve the entire blockchain.
+- `GET /api/blocks/:index`: Get a block by its index.
+- `POST /api/mine`: Mine a new block.
+- `GET /api/length`: Get the current chain length.
+
+### Transactions
+- `POST /api/transactions/new`: Add a new transaction (requires signature).
+- `GET /api/transactions/pending`: View pending transactions in the mempool.
+
+### Wallet
+- `POST /api/wallet`: Generate a new wallet (returns private key, public key, and address).
+
+### Network
+- `POST /api/nodes/register`: Register one or more neighbor nodes.
+- `GET /api/nodes/resolve`: Run consensus algorithm to resolve conflicts.
 
 
 ## Getting Started

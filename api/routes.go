@@ -17,4 +17,9 @@ func SetupRoutes(router *gin.Engine, bc *blockchain.Blockchain) {
 	router.GET("/api/timestamp", func(c *gin.Context) { GetTimestamp(c, bc) })
 	router.GET("/api/length", func(c *gin.Context) { GetLength(c, bc) })
 	router.GET("/api/full-chain", func(c *gin.Context) { GetFullChain(c, bc) })
+	router.POST("/api/transactions/new", func(c *gin.Context) { NewTransaction(c, bc) })
+	router.GET("/api/transactions/pending", func(c *gin.Context) { GetPendingTransactions(c, bc) })
+	router.POST("/api/wallet", func(c *gin.Context) { CreateWallet(c) })
+	router.POST("/api/nodes/register", func(c *gin.Context) { RegisterNodes(c, bc) })
+	router.GET("/api/nodes/resolve", func(c *gin.Context) { Consensus(c, bc) })
 }

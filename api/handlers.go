@@ -2,6 +2,8 @@ package api
 
 import (
 	"blocklite/blockchain"
+	"blocklite/wallet"
+	"encoding/hex"
 	"net/http"
 	"strconv"
 
@@ -92,4 +94,79 @@ func GetFullChain(c *gin.Context, bc *blockchain.Blockchain) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// NewTransaction Create a new transaction
+func NewTransaction(c *gin.Context, bc *blockchain.Blockchain) {
+	var tx blockchain.Transaction
+
+	if err := c.ShouldBindJSON(&tx); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Verify signature if sender is not "0" (system)
+	if tx.Sender != "0" {
+		data := tx.Sender + tx.Receiver + strconv.FormatFloat(tx.Amount, 'f', -1, 64)
+		if !wallet.Verify(tx.Sender, data, tx.Signature) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
+			return
+		}
+	}
+
+	index := bc.AddTransaction(tx.Sender, tx.Receiver, tx.Amount, tx.Signature)
+	c.JSON(http.StatusCreated, gin.H{"message": "Transaction will be added to Block " + strconv.Itoa(index)})
+}
+
+// GetPendingTransactions Return the list of pending transactions
+func GetPendingTransactions(c *gin.Context, bc *blockchain.Blockchain) {
+	c.JSON(http.StatusOK, bc.CurrentTransactions)
+}
+
+// CreateWallet Generate a new wallet
+func CreateWallet(c *gin.Context) {
+	w := wallet.NewWallet()
+	c.JSON(http.StatusCreated, gin.H{
+		"private_key": hex.EncodeToString(w.PrivateKey.D.Bytes()),
+		"public_key":  w.GetAddress(),
+		"address":     w.GetAddress(),
+	})
+}
+
+// RegisterNodes Add new nodes to the blockchain network
+func RegisterNodes(c *gin.Context, bc *blockchain.Blockchain) {
+	var input struct {
+		Nodes []string `json:"nodes"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	for _, node := range input.Nodes {
+		bc.RegisterNode(node)
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "New nodes have been added",
+		"nodes":   bc.Nodes,
+	})
+}
+
+// Consensus Resolve conflicts between nodes
+func Consensus(c *gin.Context, bc *blockchain.Blockchain) {
+	replaced := bc.ResolveConflicts()
+
+	if replaced {
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Our chain was replaced",
+			"new_chain": bc.Chain,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Our chain is authoritative",
+			"chain":   bc.Chain,
+		})
+	}
 }

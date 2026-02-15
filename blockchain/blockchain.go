@@ -3,16 +3,60 @@ package blockchain
 import (
 	"blocklite/utils"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
 
+// ValidChain check if a given blockchain is valid
+func (bc *Blockchain) ValidChain(chain []Block) bool {
+	if len(chain) == 0 {
+		return false
+	}
+
+	previousBlock := chain[0]
+	currentIndex := 1
+
+	for currentIndex < len(chain) {
+		block := chain[currentIndex]
+
+		// Check that the hash of the block is correct
+		if block.PreviousHash != previousBlock.CalculateHash() {
+			return false
+		}
+
+		// Check that the Proof of Work is correct
+		if valid, _ := VerifyProof(block.Proof, previousBlock.Proof); !valid {
+			return false
+		}
+
+		previousBlock = block
+		currentIndex++
+	}
+
+	return true
+}
+
 var timeNow = time.Now
+
+const BlockchainFile = "blockchain.json"
 
 // Blockchain The entire blockchain
 type Blockchain struct {
-	Chain []Block
+	Chain               []Block
+	CurrentTransactions []Transaction
+	Nodes               map[string]bool
+}
+
+// Transaction represents a transfer of value
+type Transaction struct {
+	Sender    string  `json:"sender"`
+	Receiver  string  `json:"receiver"`
+	Amount    float64 `json:"amount"`
+	Signature string  `json:"signature,omitempty"`
 }
 
 // CreateBlock adds a new block to the blockchain
@@ -21,20 +65,50 @@ func (bc *Blockchain) CreateBlock(proof int, previousHash string) Block {
 		Index: len(bc.Chain) + 1,
 		// Timestamp: time.Now().String(),
 		Timestamp:    timeNow().UTC().Format(time.RFC3339),
+		Transactions: bc.CurrentTransactions,
 		Proof:        proof,
 		PreviousHash: previousHash,
 	}
 
+	// Reset the current list of transactions
+	bc.CurrentTransactions = []Transaction{}
+
 	bc.Chain = append(bc.Chain, block)
+	
+	// Persistence: save the chain after every new block
+	_ = bc.Save(BlockchainFile)
+	
 	return block
 }
 
 // NewBlockChain creates a new blockchain and adds the genesis block
 func NewBlockChain() *Blockchain {
-	bc := &Blockchain{}
+	bc := &Blockchain{
+		Chain:               []Block{},
+		CurrentTransactions: []Transaction{},
+		Nodes:               make(map[string]bool),
+	}
+
+	// Persistence: try to load existing chain
+	if err := bc.LoadFromFile(BlockchainFile); err == nil && len(bc.Chain) > 0 {
+		return bc
+	}
+
 	bc.CreateBlock(1, "0")
 
 	return bc
+}
+
+// AddTransaction creates a new transaction to go into the next mined Block
+func (bc *Blockchain) AddTransaction(sender, receiver string, amount float64, signature string) int {
+	bc.CurrentTransactions = append(bc.CurrentTransactions, Transaction{
+		Sender:    sender,
+		Receiver:  receiver,
+		Amount:    amount,
+		Signature: signature,
+	})
+
+	return bc.GetLatestBlock().Index + 1
 }
 
 // GetLatestBlock Return the last/previous Block in the Blockchain
@@ -134,4 +208,65 @@ func (bc *Blockchain) GetBlockByIndex(index int) (Block, bool) {
 		return Block{}, false
 	}
 	return bc.Chain[index-1], true
+}
+
+// Save serializes the blockchain and saves it to a file
+func (bc *Blockchain) Save(filename string) error {
+	data, err := json.MarshalIndent(bc.Chain, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, 0644)
+}
+
+// LoadFromFile loads the blockchain from a file
+func (bc *Blockchain) LoadFromFile(filename string) error {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, &bc.Chain)
+}
+
+// RegisterNode adds a new node to the list of nodes
+func (bc *Blockchain) RegisterNode(address string) {
+	bc.Nodes[address] = true
+}
+
+// ResolveConflicts implements our consensus algorithm.
+// It replaces our chain with the longest one in the network.
+func (bc *Blockchain) ResolveConflicts() bool {
+	var newChain []Block
+	maxLength := len(bc.Chain)
+
+	for node := range bc.Nodes {
+		resp, err := http.Get("http://" + node + "/api/full-chain")
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			var result struct {
+				Length int     `json:"length"`
+				Chain  []Block `json:"chain"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				continue
+			}
+
+			if result.Length > maxLength && bc.ValidChain(result.Chain) {
+				maxLength = result.Length
+				newChain = result.Chain
+			}
+		}
+	}
+
+	if newChain != nil {
+		bc.Chain = newChain
+		_ = bc.Save(BlockchainFile)
+		return true
+	}
+
+	return false
 }
