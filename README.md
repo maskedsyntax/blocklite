@@ -5,12 +5,11 @@
 <h1 align="center">BlockLite</h1>
 
 <p align="center">
-  <b> An experimental blockchain implementation written from scratch in Go! </b>
+  <b> A Minimalistic Decentralized Cryptocurrency Implementation in Go </b>
 </p>
 
 <p align="center">
-
-  <img src="https://img.shields.io/badge/Status-In%20Progress-orange" />
+  <img src="https://img.shields.io/badge/Status-Complete-green" />
   <img src="https://img.shields.io/badge/Built_with-Go-blueviolet" />
   <img src="https://img.shields.io/badge/API-Gin-8bc34a" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" />
@@ -18,35 +17,28 @@
 
 ## Overview
 
-BlockLite aims to build a blockchain from the ground up, with plans to introduce a cryptocurrency called **`MaskedCoins`**. The current codebase includes a basic blockchain structure with proof-of-work consensus, RESTful APIs, and supporting utilities, with more features in development.
+**BlockLite** is an educational, from-scratch implementation of a decentralized cryptocurrency. It demonstrates the core principles of blockchain technology, including Proof of Work (PoW), cryptographic security, distributed consensus, and transaction management.
 
-## Features
-- **Blockchain Core**: Implements a simple blockchain with blocks containing index, timestamp, proof, previous hash, and transactions.
-- **Transactions & Mempool**: Support for value transfers with a mempool for pending transactions.
-- **Wallet System**: ECDSA-based wallets for generating addresses and signing transactions.
-- **Persistence**: Automatic blockchain state persistence to a JSON file.
-- **P2P Networking & Consensus**: Register multiple nodes and resolve conflicts using the "Longest Chain Rule".
-- **Proof of Work**: Uses a PoW algorithm requiring 4 leading zeros in the hash.
+The project implements a toy cryptocurrency called **MaskedCoins**, allowing users to create wallets, mine blocks for rewards, and transfer value securely between peers.
 
-## API Endpoints
+## Core Features
 
-### Blockchain
-- `GET /api/full-chain`: Retrieve the entire blockchain.
-- `GET /api/blocks/:index`: Get a block by its index.
-- `POST /api/mine`: Mine a new block.
-- `GET /api/length`: Get the current chain length.
+- **Distributed Ledger**: A tamper-evident blockchain that stores the complete transaction history.
+- **Proof of Work (PoW)**: A mining mechanism that secures the network by requiring computational effort (4 leading zeros in SHA-256 hashes).
+- **Wallet System**: ECDSA-based cryptographic wallets for secure identity and transaction signing.
+- **Mempool & Transactions**: A transaction pool where pending transfers wait to be included in the next mined block.
+- **Consensus Algorithm**: Implements the "Longest Chain Rule" to resolve conflicts and synchronize state across multiple nodes.
+- **Economic Model**:
+    - **Mining Rewards**: Miners are awarded 50 MaskedCoins for every block they successfully mine.
+    - **Balance Verification**: Transactions are only accepted if the sender has a sufficient balance, calculated by traversing the blockchain.
+- **Persistence**: Automatic state saving and loading via a local JSON file (`blockchain.json`).
+- **Thread Safety**: Fully synchronized internal state to handle concurrent API requests safely.
 
-### Transactions
-- `POST /api/transactions/new`: Add a new transaction (requires signature).
-- `GET /api/transactions/pending`: View pending transactions in the mempool.
+## Use Cases
 
-### Wallet
-- `POST /api/wallet`: Generate a new wallet (returns private key, public key, and address).
-
-### Network
-- `POST /api/nodes/register`: Register one or more neighbor nodes.
-- `GET /api/nodes/resolve`: Run consensus algorithm to resolve conflicts.
-
+1.  **Educational Tool**: Understand how blocks are linked, how mining works, and how digital signatures verify ownership.
+2.  **Blockchain Prototype**: A base for experimenting with new consensus rules, transaction types, or networking protocols.
+3.  **Local Crypto Simulation**: Run multiple instances locally to simulate a small-scale decentralized network.
 
 ## Getting Started
 
@@ -68,33 +60,72 @@ BlockLite aims to build a blockchain from the ground up, with plans to introduce
    go mod tidy
    ```
 
-3. Install `air` for live reloading:
+3. Run the project:
    ```bash
-   go install github.com/air-verse/air@latest
+   go run main.go
    ```
+   *Or use `air` for live reloading if installed.*
 
-> [!IMPORTANT]
-> Ensure `air` is in your PATH to execute it successfully.  
+## How to Use
 
-### Run the Project
-- Start the server with live reloading:
-  ```bash
-  air
-  ```
-- Access the API at `http://localhost:8080` (configurable via `PORT` environment variable).
+### 1. Generate a Wallet
+Create your cryptographic identity to start receiving coins.
+```bash
+curl -X POST http://localhost:8080/api/wallet
+```
+*Save the returned `address` and `private_key`.*
 
-## Development
-- **Live Reloading**: Changes in `.go` files trigger restarts via `air`. The `/tmp` folder is temporary and ignored in version control.
-- **Testing**: Run tests with:
-   ```bash
-   go test ./...
-   ```
+### 2. Mine Blocks for Rewards
+Start mining to earn MaskedCoins. You can provide your address to receive the reward.
+```bash
+curl -X POST http://localhost:8080/api/mine -d '{"miner_address": "YOUR_ADDRESS"}'
+```
 
-## Contributing
-This is a personal project, but feel free to fork and submit pull requests. Feedback is welcome!
+### 3. Check Your Balance
+Verify how many coins you have earned or received.
+```bash
+curl http://localhost:8080/api/balance/YOUR_ADDRESS
+```
+
+### 4. Send Coins
+Transfer coins to another address. This requires signing the transaction (currently, the API expects the signature to be provided in the request).
+```bash
+curl -X POST http://localhost:8080/api/transactions/new -d '{
+  "sender": "YOUR_PUBLIC_KEY",
+  "receiver": "RECIPIENT_ADDRESS",
+  "amount": 10.5,
+  "signature": "YOUR_DIGITAL_SIGNATURE"
+}'
+```
+
+### 5. Network Synchronization
+If running multiple nodes, register them and resolve conflicts:
+```bash
+# Register a neighbor
+curl -X POST http://localhost:8080/api/nodes/register -d '{"nodes": ["localhost:8081"]}'
+
+# Sync with the longest chain in the network
+curl http://localhost:8080/api/nodes/resolve
+```
+
+## API Reference
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/api/full-chain` | `GET` | Retrieve the entire blockchain |
+| `/api/mine` | `POST` | Mine a new block and earn rewards |
+| `/api/wallet` | `POST` | Generate a new ECDSA wallet |
+| `/api/balance/:address` | `GET` | Get the balance of a specific address |
+| `/api/transactions/new` | `POST` | Add a new transaction to the mempool |
+| `/api/transactions/pending` | `GET` | View pending transactions |
+| `/api/nodes/register` | `POST` | Register new neighbor nodes |
+| `/api/nodes/resolve` | `GET` | Run the consensus algorithm |
+
+## Testing
+The project includes a comprehensive test suite for all core components:
+```bash
+go test ./...
+```
 
 ## License
-This project is licensed under the [MIT License](LICENSE). See the `LICENSE` file for details.
-
-> [!NOTE]
-> Updates on `MaskedCoins` and future features will be shared as they progress. 
+This project is licensed under the [MIT License](LICENSE).

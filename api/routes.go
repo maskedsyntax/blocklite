@@ -22,4 +22,5 @@ func SetupRoutes(router *gin.Engine, bc *blockchain.Blockchain) {
 	router.POST("/api/wallet", func(c *gin.Context) { CreateWallet(c) })
 	router.POST("/api/nodes/register", func(c *gin.Context) { RegisterNodes(c, bc) })
 	router.GET("/api/nodes/resolve", func(c *gin.Context) { Consensus(c, bc) })
+	router.GET("/api/balance/:address", func(c *gin.Context) { GetBalance(c, bc) })
 }

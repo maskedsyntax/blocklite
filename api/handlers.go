@@ -33,6 +33,20 @@ func CreateBlock(c *gin.Context, bc *blockchain.Blockchain) {
 
 // MineBlock Mine a new block with proof of work
 func MineBlock(c *gin.Context, bc *blockchain.Blockchain) {
+	// Mining reward for the miner (dummy address "miner" for now or provided in JSON)
+	var input struct {
+		MinerAddress string `json:"miner_address"`
+	}
+	_ = c.ShouldBindJSON(&input)
+
+	miner := input.MinerAddress
+	if miner == "" {
+		miner = "system-miner" // default if not provided
+	}
+
+	// Add mining reward transaction
+	bc.AddTransaction("0", miner, blockchain.MiningReward, "")
+
 	latestBlock := bc.GetLatestBlock()
 	newProof := blockchain.ProofOfWork(latestBlock.Proof)
 	newBlock := bc.CreateBlock(newProof, latestBlock.CalculateHash())
@@ -107,6 +121,12 @@ func NewTransaction(c *gin.Context, bc *blockchain.Blockchain) {
 
 	// Verify signature if sender is not "0" (system)
 	if tx.Sender != "0" {
+		// Check balance
+		if bc.GetBalance(tx.Sender) < tx.Amount {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Insufficient balance"})
+			return
+		}
+
 		data := tx.Sender + tx.Receiver + strconv.FormatFloat(tx.Amount, 'f', -1, 64)
 		if !wallet.Verify(tx.Sender, data, tx.Signature) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid signature"})
@@ -116,6 +136,13 @@ func NewTransaction(c *gin.Context, bc *blockchain.Blockchain) {
 
 	index := bc.AddTransaction(tx.Sender, tx.Receiver, tx.Amount, tx.Signature)
 	c.JSON(http.StatusCreated, gin.H{"message": "Transaction will be added to Block " + strconv.Itoa(index)})
+}
+
+// GetBalance returns the balance of an address
+func GetBalance(c *gin.Context, bc *blockchain.Blockchain) {
+	address := c.Param("address")
+	balance := bc.GetBalance(address)
+	c.JSON(http.StatusOK, gin.H{"address": address, "balance": balance})
 }
 
 // GetPendingTransactions Return the list of pending transactions

@@ -2,12 +2,14 @@ package blockchain
 
 import (
 	"blocklite/utils"
+	"blocklite/wallet"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -33,6 +35,16 @@ func (bc *Blockchain) ValidChain(chain []Block) bool {
 			return false
 		}
 
+		// Verify all transaction signatures in the block
+		for _, tx := range block.Transactions {
+			if tx.Sender != "0" {
+				data := tx.Sender + tx.Receiver + strconv.FormatFloat(tx.Amount, 'f', -1, 64)
+				if !wallet.Verify(tx.Sender, data, tx.Signature) {
+					return false
+				}
+			}
+		}
+
 		previousBlock = block
 		currentIndex++
 	}
@@ -43,12 +55,14 @@ func (bc *Blockchain) ValidChain(chain []Block) bool {
 var timeNow = time.Now
 
 const BlockchainFile = "blockchain.json"
+const MiningReward = 50.0
 
 // Blockchain The entire blockchain
 type Blockchain struct {
 	Chain               []Block
 	CurrentTransactions []Transaction
 	Nodes               map[string]bool
+	mux                 sync.Mutex
 }
 
 // Transaction represents a transfer of value
@@ -61,6 +75,9 @@ type Transaction struct {
 
 // CreateBlock adds a new block to the blockchain
 func (bc *Blockchain) CreateBlock(proof int, previousHash string) Block {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
+
 	block := Block{
 		Index: len(bc.Chain) + 1,
 		// Timestamp: time.Now().String(),
@@ -101,6 +118,9 @@ func NewBlockChain() *Blockchain {
 
 // AddTransaction creates a new transaction to go into the next mined Block
 func (bc *Blockchain) AddTransaction(sender, receiver string, amount float64, signature string) int {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
+
 	bc.CurrentTransactions = append(bc.CurrentTransactions, Transaction{
 		Sender:    sender,
 		Receiver:  receiver,
@@ -108,11 +128,32 @@ func (bc *Blockchain) AddTransaction(sender, receiver string, amount float64, si
 		Signature: signature,
 	})
 
-	return bc.GetLatestBlock().Index + 1
+	return len(bc.Chain) + 1
+}
+
+// GetBalance returns the balance of a given address
+func (bc *Blockchain) GetBalance(address string) float64 {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
+
+	balance := 0.0
+	for _, block := range bc.Chain {
+		for _, tx := range block.Transactions {
+			if tx.Sender == address {
+				balance -= tx.Amount
+			}
+			if tx.Receiver == address {
+				balance += tx.Amount
+			}
+		}
+	}
+	return balance
 }
 
 // GetLatestBlock Return the last/previous Block in the Blockchain
 func (bc *Blockchain) GetLatestBlock() Block {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 	lastBlock.Print()
 	return lastBlock
@@ -152,6 +193,8 @@ func ProofOfWork(lastProof int) int {
 
 // IsChainValid Function to check if the blockchain is valid
 func (bc *Blockchain) IsChainValid() bool {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
 
 	previousBlock := bc.Chain[0]
 	blockIndex := 1
@@ -199,11 +242,15 @@ func (bc *Blockchain) Print() {
 
 // GetLength Return the number of blocks in the blockchain.
 func (bc *Blockchain) GetLength() int {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
 	return len(bc.Chain)
 }
 
 // GetBlockByIndex Return the block at the specified index (1-based)
 func (bc *Blockchain) GetBlockByIndex(index int) (Block, bool) {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
 	if index < 1 || index > len(bc.Chain) {
 		return Block{}, false
 	}
@@ -230,21 +277,29 @@ func (bc *Blockchain) LoadFromFile(filename string) error {
 
 // RegisterNode adds a new node to the list of nodes
 func (bc *Blockchain) RegisterNode(address string) {
+	bc.mux.Lock()
+	defer bc.mux.Unlock()
 	bc.Nodes[address] = true
 }
 
 // ResolveConflicts implements our consensus algorithm.
 // It replaces our chain with the longest one in the network.
 func (bc *Blockchain) ResolveConflicts() bool {
-	var newChain []Block
-	maxLength := len(bc.Chain)
-
+	bc.mux.Lock()
+	nodes := []string{}
 	for node := range bc.Nodes {
+		nodes = append(nodes, node)
+	}
+	bc.mux.Unlock()
+
+	var newChain []Block
+	maxLength := bc.GetLength()
+
+	for _, node := range nodes {
 		resp, err := http.Get("http://" + node + "/api/full-chain")
 		if err != nil {
 			continue
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			var result struct {
@@ -252,18 +307,24 @@ func (bc *Blockchain) ResolveConflicts() bool {
 				Chain  []Block `json:"chain"`
 			}
 			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				resp.Body.Close()
 				continue
 			}
+			resp.Body.Close()
 
 			if result.Length > maxLength && bc.ValidChain(result.Chain) {
 				maxLength = result.Length
 				newChain = result.Chain
 			}
+		} else {
+			resp.Body.Close()
 		}
 	}
 
 	if newChain != nil {
+		bc.mux.Lock()
 		bc.Chain = newChain
+		bc.mux.Unlock()
 		_ = bc.Save(BlockchainFile)
 		return true
 	}
